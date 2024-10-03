@@ -1,53 +1,36 @@
-import SimpleLightbox from 'simplelightbox';
-import 'simplelightbox/dist/simple-lightbox.min.css';
 
+import SimpleLightbox from "simplelightbox";
+import "simplelightbox/dist/simple-lightbox.min.css";
+
+const gallery = document.querySelector('.gallery');
 let lightbox;
 
-export function initializeLightbox() {
-  lightbox = new SimpleLightbox('.gallery a', {
-    captionsData: 'alt',
-    captionDelay: 250,
-  });
-}
+export function renderImages(images) {
+  const markup = images.map(({ webformatURL, largeImageURL, tags, likes, views, comments, downloads }) => {
+    return `
+      <li class="gallery__item">
+        <a href="${largeImageURL}">
+          <img class="gallery__image" src="${webformatURL}" alt="${tags}" loading="lazy" />
+        </a>
+        <div class="info">
+          <p><b>Likes</b> ${likes}</p>
+          <p><b>Views</b> ${views}</p>
+          <p><b>Comments</b> ${comments}</p>
+          <p><b>Downloads</b> ${downloads}</p>
+        </div>
+      </li>
+    `;
+  }).join('');
 
-export function refreshLightbox() {
-  if (lightbox) {
+  gallery.innerHTML = markup;
+
+  if (!lightbox) {
+    lightbox = new SimpleLightbox('.gallery a');
+  } else {
     lightbox.refresh();
   }
 }
 
-export function createImageCards(images, gallery) {
-  const markup = images.map(image => `
-    <li class="gallery-item">
-      <div class="photo-card">
-        <a href="${image.largeImageURL}" class="link">
-          <img src="${image.webformatURL}" alt="${image.tags}" loading="lazy" />
-        </a>
-        <div class="info">
-          <p class="info-item"><b class="name-info">Likes</b> ${image.likes}</p>
-          <p class="info-item"><b class="name-info">Views</b> ${image.views}</p>
-          <p class="info-item"><b class="name-info">Comments</b> ${image.comments}</p>
-          <p class="info-item"><b class="name-info">Downloads</b> ${image.downloads}</p>
-        </div>
-      </div>
-    </li>
-  `).join('');
-
-  gallery.insertAdjacentHTML('beforeend', markup);
-  
-  refreshLightbox();
-}
-
-export function clearGallery(gallery) {
-  gallery.innerHTML = ''; 
-}
-
-export function showLoader(loadingIndicator) {
-  loadingIndicator.classList.remove('hidden');
-  loadingIndicator.style.display = 'block'; 
-}
-
-export function hideLoader(loadingIndicator) {
-  loadingIndicator.classList.add('hidden');
-  loadingIndicator.style.display = 'none'; 
+export function clearGallery() {
+  gallery.innerHTML = '';
 }
