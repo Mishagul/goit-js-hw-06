@@ -13,6 +13,5 @@ export function fetchImages(query, page = 1) {
     })
     .catch(error => {
       console.error(error);
-      throw error;
     });
 }
