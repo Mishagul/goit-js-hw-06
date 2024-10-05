@@ -1,60 +1,111 @@
-import { fetchImages } from './js/pixabay-api.js';
-import { renderImages, clearGallery } from './js/render-functions.js';
 import iziToast from 'izitoast';
 import 'izitoast/dist/css/iziToast.min.css';
+import SimpleLightbox from 'simplelightbox';
+import 'simplelightbox/dist/simple-lightbox.min.css';
+import { fetchImages, per_page } from './js/pixabay-api.js';
+import { handleSuccess } from './js/render-functions.js';
 
-const form = document.querySelector('#search-form');
-const loader = document.querySelector('.loader');
+const library = new SimpleLightbox('.gallery a', {
+  captionDelay: 300,
+  captionsData: 'alt',
+});
+
+export const refs = {
+  form: document.querySelector('.form'),
+  gallery: document.querySelector('.gallery'),
+  loader: document.querySelector('.loader'),
+  button: document.querySelector('.gallery-button'),
+};
+
+refs.form.addEventListener('submit', handleSubmit);
+refs.button.addEventListener('click', handleButtonShowMore);
+
 let query = '';
 let page = 1;
 
-form.addEventListener('submit', onSearch);
-
-function onSearch(event) {
+async function handleSubmit(event) {
   event.preventDefault();
-  query = event.currentTarget.elements.searchQuery.value.trim();
+  const form = event.currentTarget;
+  const inputValue = form.elements.state.value.trim();
 
-  if (query === '') {
+  query = inputValue;
+  page = 1;
+  refs.gallery.innerHTML = '';
+  refs.button.classList.remove('is-visible');
+
+  if (!inputValue) {
     iziToast.error({
-      title: 'Error',
-      message: 'Please enter a search query.',
+      message: 'Please enter your request',
+      position: 'bottomRight',
     });
+    refs.button.classList.remove('is-visible');
     return;
   }
+  refs.loader.classList.add('is-visible');
 
-  clearGallery();
-  showLoader();
+  try {
+    const { hits } = await fetchImages(query, page);
 
-  fetchImages(query, page)
-    .then(data => {
-      if (data.hits.length === 0) {
-        iziToast.warning({
-          title: 'No results',
-          message: 'Sorry, there are no images matching your search query. Please try again!',
-        });
-      } else {
-        renderImages(data.hits);
-      }
-    })
-    .catch(error => {
+    if (hits.length === 0) {
       iziToast.error({
-        title: 'Error',
-        message: 'Failed to fetch images. Please try again later.',
+        message:
+          'Sorry, there are no images matching your search query. Please try again!',
+        position: 'bottomRight',
       });
-    })
-    .finally(() => {
-      hideLoader();
-    });
+      return;
+    }
+
+    hits.length < per_page
+      ? refs.button.classList.remove('is-visible')
+      : refs.button.classList.add('is-visible');
+
+    const markup = handleSuccess(hits);
+    refs.gallery.insertAdjacentHTML('beforeend', markup);
+    library.refresh();
+  } catch (error) {
+    console.log(error.message);
+  } finally {
+    refs.loader.classList.remove('is-visible');
+    refs.form.reset();
+  }
 }
 
-iziToast.settings({
-  position: 'topRight'
-});
+async function handleButtonShowMore() {
+  page += 1;
 
-function showLoader() {
-  loader.classList.remove('hidden');
+  try {
+    refs.loader.classList.add('is-visible');
+    refs.button.classList.remove('is-visible');
+    const { hits, totalHits } = await fetchImages(query, page);
+
+    const markup = handleSuccess(hits);
+    refs.gallery.insertAdjacentHTML('beforeend', markup);
+    library.refresh();
+    handlePageScroll();
+    if (page > Math.ceil(totalHits / per_page) - 1) {
+      refs.button.classList.remove('is-visible');
+      iziToast.error({
+        message: "We're sorry, but you've reached the end of search results.",
+        position: 'bottomRight',
+      });
+      return;
+    }
+    refs.button.classList.add('is-visible');
+  } catch (error) {
+    console.log(error.message);
+  } finally {
+    refs.loader.classList.remove('is-visible');
+  }
 }
 
-function hideLoader() {
-  loader.classList.add('hidden');
+function handlePageScroll() {
+  const heightCard = refs.gallery.querySelector('li');
+  const cardHeight = heightCard.getBoundingClientRect().height;
+  const scrollHeight = cardHeight * 2 + 140;
+
+  window.scrollBy({
+    top: scrollHeight,
+    left: 0,
+    behavior: 'smooth',
+  });
 }

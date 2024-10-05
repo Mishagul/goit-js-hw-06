@@ -1,11 +1,11 @@
 {
-  "name": "goit-js-hw-11",
+  "name": "goit-js-hw-12",
   "private": true,
   "version": "1.0.0",
   "type": "module",
   "scripts": {
     "dev": "vite",
-    "build": "vite build --base=/goit-js-hw-11/",
+    "build": "vite build --base=/goit-js-hw-12/",
     "preview": "vite preview"
   },
   "devDependencies": {
@@ -17,10 +17,15 @@
   "author": "Alexander Repeta <alexander.repeta@gmail.com>",
   "license": "ISC",
   "dependencies": {
-    "css-loader": "^7.1.2",
+    "axios": "^1.7.7",
     "izitoast": "^1.4.0",
     "simplelightbox": "^2.14.3",
     "vite-plugin-full-reload": "^1.2.0",
     "vite-plugin-html-inject": "^1.1.2"
+  },
+  "main": "vite.config.js",
+  "repository": {
+    "type": "git",
+    "url": "goit-js-hw-11"
   }
 }
